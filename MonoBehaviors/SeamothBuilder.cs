@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using SMLHelper.V2.Assets;
 using UnityEngine;
 
 namespace SeamothHabitatBuilder.MonoBehaviors

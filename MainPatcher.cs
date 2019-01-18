@@ -11,12 +11,24 @@ namespace SeamothHabitatBuilder
 {
     public class MainPatcher
     {
+        // The new tech type
         public static TechType SeamothBuilderModule;
+
+        // Effects and other stuff to copy from the Builder tool
+        public static Transform nozzleLeft;
+        public static Transform nozzleRight;
+        public static Transform beamLeft;
+        public static Transform beamRight;
+        public static Animator animator;
+        public static FMOD_CustomLoopingEmitter buildSound;
+        public static FMODAsset completeSound;
 
         public static void Patch()
         {
             try
             {
+                SMLHelper.V2.Handlers.PrefabHandler.
+
                 // Hook up with harmony
                 var harmony = HarmonyInstance.Create("com.standpeter.seamothhabitatbuilder");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -46,6 +58,9 @@ namespace SeamothHabitatBuilder
                 CraftDataHandler.AddToGroup(TechGroup.VehicleUpgrades, TechCategory.VehicleUpgrades, SeamothBuilderModule);
                 CraftDataHandler.SetQuickSlotType(SeamothBuilderModule, QuickSlotType.Selectable);
                 CraftDataHandler.SetEquipmentType(SeamothBuilderModule, EquipmentType.SeamothModule);
+
+                // Register the prefab
+                PrefabHandler.RegisterPrefab()
 
                 Console.WriteLine("[SeamothHabitatBuilder] Succesfully patched!");
             }
