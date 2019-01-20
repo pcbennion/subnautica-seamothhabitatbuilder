@@ -1,24 +1,30 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
-using SMLHelper.V2.Assets;
 using UnityEngine;
 
 namespace SeamothHabitatBuilder.MonoBehaviors
 {
-    /*  SeamothBuilder
-     *  This copies most of the functionality of the BuilderTool class, except
-     *  for battery power, the on-tool display, and any mesh animations.
-     *  Effects have been tweaked to come out from below the cockpit, and the
-     *  tool has slightly greater range.
-     *  
-     *  Annotations added to most code for clarity
-     *  
-     *  BuilderTool source code was decompiled using dnSpy.
-     */
+    //=========================================================================
+    // SeamothBuilder
+    //
+    // Copies most of the functionality of the BuilderTool class, except for 
+    // battery power, the on-tool display, and any mesh animations from the
+    // handheld tool
+    //
+    // Effects have been tweaked to come out from below the cockpit, and the
+    // tool has slightly greater range to accommodate the size of the Seamoth
+    //  
+    // Annotations added to most code for clarity
+    //  
+    // BuilderTool source code was decompiled using dnSpy
+    //=========================================================================
+
     class SeamothBuilder : MonoBehaviour
     {
+        // New variables
         private Vehicle vehicle;
+        public bool enable { get; set; }
 
         // VFX and sounds
         public Transform nozzleLeft;
@@ -34,6 +40,7 @@ namespace SeamothHabitatBuilder.MonoBehaviors
         public FMOD_CustomLoopingEmitter buildSound;
         public FMODAsset completeSound;
 
+        // Misc internal variables
         private const float hitRange = 40f;
         private bool isConstructing;
         private Constructable constructable;
@@ -49,35 +56,61 @@ namespace SeamothHabitatBuilder.MonoBehaviors
         private string deconstructText;
         private string constructText;
 
+        //=====================================================================
+        // Start
+        //
+        // Initialize the object gracefully
+        //=====================================================================
         private void Start() 
         {
-            // Get the vehicle this module is attached to
+            // Get a reference to the parent vehicle and initialize "enable"
             this.vehicle = GetComponent<Vehicle>();
+            this.enable = false;
 
             Console.WriteLine(string.Format("[SeamothHabitatBuilder] Techtype: {0}", MainPatcher.SeamothBuilderModule.AsString()));
 
+            // Reset all beam effects and the tooltip text
             this.SetBeamActive(false);
             this.UpdateText();
         }
 
+        //=====================================================================
+        // OnDisable
+        //
+        // Euthanize the object gracefully
+        //=====================================================================
         private void OnDisable()
         {
+            // Make sure to end any sounds
             this.buildSound.Stop();
         }
 
+        //=====================================================================
+        // Update
+        //
+        // Do frame-to-frame processing
+        //=====================================================================
         private void Update()
         {
-            // Do nothing if the player has not selected the builder (or is in menus)
-            if (Player.main.GetPDA().isOpen ||
-                 !vehicle.GetPilotingMode()) //||
-                 //vehicle.modules.GetCount(MainPatcher.SeamothBuilderModule) < 1)
+            // Do nothing if the Builder is not selected or if the player is in menus
+            if (!enable || Player.main.GetPDA().isOpen) return;
+
+            // Disable if the parent vehicle is not being operated (or if the module has been removed)
+            if (vehicle.modules.GetCount(MainPatcher.SeamothBuilderModule) <= 0 || !vehicle.GetPilotingMode())
+            {
+                enable = false;
                 return;
+            }
 
             Console.WriteLine(string.Format("[SeamothHabitatBuilder] Active Techtype: {0}", vehicle.GetSlotBinding(vehicle.GetActiveSlotID()).AsString()));
-
             this.HandleInput();
         }
 
+        //=====================================================================
+        // LateUpdate
+        //
+        // Handle low priority processing like vfx and animation
+        //=====================================================================
         private void LateUpdate() 
         {
             Quaternion b = Quaternion.identity;
@@ -148,6 +181,12 @@ namespace SeamothHabitatBuilder.MonoBehaviors
             this.constructable = null;
         }
 
+        //=====================================================================
+        // HandleInput
+        //
+        // Called by Update. Checks for input events and operates the Builder
+        // accordingly
+        //=====================================================================
         private void HandleInput() 
         {
             if (this.handleInputFrame == Time.frameCount)
@@ -239,6 +278,11 @@ namespace SeamothHabitatBuilder.MonoBehaviors
             }
         }
 
+        //=====================================================================
+        // UpdateText
+        //
+        // Sets tooltip text
+        //=====================================================================
         private void UpdateText()
         {
             string buttonFormat = LanguageCache.GetButtonFormat("ConstructFormat", GameInput.Button.LeftHand);
@@ -247,6 +291,12 @@ namespace SeamothHabitatBuilder.MonoBehaviors
             this.deconstructText = buttonFormat2;
         }
 
+        //=====================================================================
+        // Construct
+        //
+        // Figure out whether we're starting, ending, or continuing
+        // construction and plays the appropriate sounds
+        //=====================================================================
         private bool Construct(Constructable c, bool state) 
         {
             if (c != null && !c.constructed)
@@ -266,6 +316,12 @@ namespace SeamothHabitatBuilder.MonoBehaviors
             return false;
         }
 
+        //=====================================================================
+        // OnHover (Constructable)
+        //
+        // Displays tooltip text when the player is looking at a constructable
+        // object
+        //=====================================================================
         private void OnHover(Constructable constructable)
         {
             HandReticle main = HandReticle.main;
@@ -297,12 +353,22 @@ namespace SeamothHabitatBuilder.MonoBehaviors
             }
         }
 
+        //=====================================================================
+        // OnHover (Deconstructable)
+        //
+        // As above, but only for DEconstructable objects
+        //=====================================================================
         private void OnHover(BaseDeconstructable deconstructable)
         {
             HandReticle main = HandReticle.main;
             main.SetInteractInfo(deconstructable.Name, this.deconstructText);
         }
 
+        //=====================================================================
+        // SetBeamActive
+        //
+        // Acts as a toggle for the beam effects
+        //=====================================================================
         private void SetBeamActive(bool state) 
         {
             if (this.beamLeft != null)

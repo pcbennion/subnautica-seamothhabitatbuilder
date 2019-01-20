@@ -6,9 +6,18 @@ using SMLHelper.V2.Assets;
 using SMLHelper.V2.Handlers;
 using SMLHelper.V2.Crafting;
 using Harmony;
+using SeamothHabitatBuilder.Prefabs;
 
 namespace SeamothHabitatBuilder  
 {
+    //=========================================================================
+    // MainPatcher
+    // 
+    // Main entry point for Harmony. Calls all patches within this mod and
+    // uses SMLHelper V2 to create the inventory object and tech data for the
+    // Seamoth Builder module
+    //=========================================================================
+
     public class MainPatcher
     {
         // The new tech type
@@ -27,8 +36,6 @@ namespace SeamothHabitatBuilder
         {
             try
             {
-                SMLHelper.V2.Handlers.PrefabHandler.
-
                 // Hook up with harmony
                 var harmony = HarmonyInstance.Create("com.standpeter.seamothhabitatbuilder");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -59,8 +66,9 @@ namespace SeamothHabitatBuilder
                 CraftDataHandler.SetQuickSlotType(SeamothBuilderModule, QuickSlotType.Selectable);
                 CraftDataHandler.SetEquipmentType(SeamothBuilderModule, EquipmentType.SeamothModule);
 
-                // Register the prefab
-                PrefabHandler.RegisterPrefab()
+                // Register the prefab for the item
+                ModPrefab prefab = new SeamothBuilderPrefab("SeamothBuilder", "WorldEntities/Tools/SeamothBuilderModule", SeamothBuilderModule);
+                PrefabHandler.RegisterPrefab(prefab);
 
                 Console.WriteLine("[SeamothHabitatBuilder] Succesfully patched!");
             }
